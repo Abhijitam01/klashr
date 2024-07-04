@@ -43,9 +43,11 @@ export default function HomePage() {
   const handleCreatePost = async () => {
     if (newPostContent.trim()) {
       try {
-        const newPost = await Api.PostData.createOneByUserId(userId, {
+        const formData: Partial<Model.PostData> = {
           content: newPostContent,
-        })
+        }
+
+        const newPost = await Api.PostData.createOneByUserId(userId, formData)
         setPosts([newPost, ...posts])
         setNewPostContent('')
         enqueueSnackbar('Post created successfully', { variant: 'success' })
@@ -61,7 +63,7 @@ export default function HomePage() {
       setPosts(
         posts.map(post =>
           post.id === postId
-            ? { ...post, likes: [...(post.likes || []), { userId }] }
+            ? { ...post, likes: [...(post.likes || []), { userId }] as Model.Like[] }
             : post,
         ),
       )
@@ -82,7 +84,7 @@ export default function HomePage() {
         setPosts(
           posts.map(post =>
             post.id === postId
-              ? { ...post, comments: [...(post.comments || []), newComment] }
+              ? { ...post, comments: [...(post.comments || []), newComment] as Model.Comment[] }
               : post,
           ),
         )
