@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Input, List, Avatar, Typography, Row, Col, Spin, Empty } from 'antd'
+import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 const { Title, Text } = Typography
 import { useAuthentication } from '@web/modules/authentication'
@@ -19,6 +19,8 @@ export default function SearchPage() {
   const { enqueueSnackbar } = useSnackbar()
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [hobbies, setHobbies] = useState('')
+  const [area, setArea] = useState('')
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState<Model.User[]>([])
 
@@ -26,7 +28,11 @@ export default function SearchPage() {
     setLoading(true)
     try {
       const usersFound = await Api.User.findMany({
-        filters: { name: { ilike: `%${searchTerm}%` } },
+        filters: {
+          name: { ilike: `%${searchTerm}%` },
+          hobbies: { ilike: `%${hobbies}%` },
+          area: { eq: area }
+        },
         includes: ['groupMembers', 'posts'],
       })
       setUsers(usersFound)
@@ -55,6 +61,32 @@ export default function SearchPage() {
             onPressEnter={handleSearch}
             allowClear
           />
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Input
+            placeholder="Search by hobbies"
+            value={hobbies}
+            onChange={e => setHobbies(e.target.value)}
+            onPressEnter={handleSearch}
+            allowClear
+          />
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Select
+            placeholder="Select area"
+            value={area}
+            onChange={value => setArea(value)}
+            style={{ width: '100%' }}
+          >
+            <Select.Option value="north">North</Select.Option>
+            <Select.Option value="south">South</Select.Option>
+            <Select.Option value="east">East</Select.Option>
+            <Select.Option value="west">West</Select.Option>
+          </Select>
         </Col>
       </Row>
       <Row justify="center">

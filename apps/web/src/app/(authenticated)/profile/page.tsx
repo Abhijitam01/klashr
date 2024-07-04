@@ -47,7 +47,7 @@ export default function ProfilePage() {
     setLoading(true)
 
     try {
-      const { hobbies, ...restValues } = values
+      const { ...restValues } = values
       const userUpdated = await Api.User.updateOne(user.id, {
         ...restValues,
       })
