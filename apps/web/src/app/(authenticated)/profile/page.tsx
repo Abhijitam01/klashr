@@ -1,7 +1,7 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography } from 'antd'
-
+import { Avatar, Button, Flex, Typography, Select } from 'antd'
+import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
 import { AuthenticationHook } from '@web/domain/authentication'
@@ -10,8 +10,10 @@ import { Utility } from '@web/libraries/utility'
 import { useAuthentication } from '@web/modules/authentication'
 import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
-import { useState } from 'react'
 import { UserForm } from './components/userForm'
+
+const { Title } = Typography
+const { Option } = Select
 
 export default function ProfilePage() {
   const authentication = useAuthentication()
@@ -24,12 +26,31 @@ export default function ProfilePage() {
 
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
+  const [hobbies, setHobbies] = useState<Model.Like[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+
+  useEffect(() => {
+    const fetchHobbies = async () => {
+      try {
+        const hobbies = await Api.Like.findManyByUserId(user.id)
+        setHobbies(hobbies)
+        setSelectedHobbies(hobbies.map(hobby => hobby.id))
+      } catch (error) {
+        enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
+      }
+    }
+
+    fetchHobbies()
+  }, [user.id, enqueueSnackbar])
 
   const handleSubmit = async (values: Partial<Model.User>) => {
     setLoading(true)
 
     try {
-      const userUpdated = await Api.User.updateOne(user.id, values)
+      const { hobbies, ...restValues } = values
+      const userUpdated = await Api.User.updateOne(user.id, {
+        ...restValues,
+      })
       authentication.setUser(userUpdated)
     } catch (error) {
       enqueueSnackbar('Could not save information', { variant: 'error' })
@@ -55,10 +76,14 @@ export default function ProfilePage() {
     }
   }
 
+  const handleHobbiesChange = (value: string[]) => {
+    setSelectedHobbies(value)
+  }
+
   return (
     <PageLayout layout="super-narrow">
       <Flex justify="space-between" align="center">
-        <Typography.Title level={1}>Profile</Typography.Title>
+        <Title level={1}>Profile</Title>
         <Button onClick={handleClickLogout} loading={isLoadingLogout}>
           Logout
         </Button>
@@ -76,6 +101,23 @@ export default function ProfilePage() {
         isDisabled={isLoadingLogout}
         onSubmit={handleSubmit}
       />
+
+      <div style={{ marginTop: '20px' }}>
+        <Title level={4}>Hobbies</Title>
+        <Select
+          mode="multiple"
+          style={{ width: '100%' }}
+          placeholder="Select your hobbies"
+          value={selectedHobbies}
+          onChange={handleHobbiesChange}
+        >
+          {hobbies.map(hobby => (
+            <Option key={hobby.id} value={hobby.id}>
+              {hobby.id}
+            </Option>
+          ))}
+        </Select>
+      </div>
     </PageLayout>
   )
 }
