@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select } from 'antd'
+import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select, Button } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 const { Title, Text } = Typography
 import { useAuthentication } from '@web/modules/authentication'
@@ -40,6 +40,34 @@ export default function SearchPage() {
       enqueueSnackbar('Error fetching users', { variant: 'error' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFollow = async (followedUserId: string) => {
+    try {
+      // Create notification for the followed user
+      await Api.Notification.createOne({
+        userId: followedUserId,
+        title: 'New Follow Request',
+        message: `You have a new follow request from ${authentication.user?.name}`,
+        senderName: authentication.user?.name,
+        senderEmail: authentication.user?.email,
+        senderPictureUrl: authentication.user?.pictureUrl,
+        redirectUrl: `/users/${userId}`,
+        dateCreated: dayjs().toISOString()
+      })
+
+      // Create notification for the following user
+      await Api.Notification.createOne({
+        userId: userId!,
+        title: 'Follow Request Sent',
+        message: `Your follow request to ${followedUserId} has been sent.`,
+        dateCreated: dayjs().toISOString()
+      })
+
+      enqueueSnackbar('Follow request sent', { variant: 'success' })
+    } catch (error) {
+      enqueueSnackbar('Error sending follow request', { variant: 'error' })
     }
   }
 
@@ -106,6 +134,9 @@ export default function SearchPage() {
                     >
                       View Profile
                     </a>,
+                    <Button key="follow" type="primary" onClick={() => handleFollow(user.id)}>
+                      Follow
+                    </Button>
                   ]}
                 >
                   <List.Item.Meta

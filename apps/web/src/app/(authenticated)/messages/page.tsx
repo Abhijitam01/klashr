@@ -80,6 +80,10 @@ export default function DirectMessagesPage() {
     }
   }
 
+  const handleUserClick = (userId: string) => {
+    router.push(`/messages/${userId}`)
+  }
+
   return (
     <PageLayout layout="narrow">
       <Row
@@ -92,39 +96,43 @@ export default function DirectMessagesPage() {
           <Text>Private conversation with {receiver?.name || 'User'}</Text>
         </Col>
       </Row>
-      <List
-        itemLayout="horizontal"
-        dataSource={messages}
-        renderItem={message => (
-          <List.Item>
-            <List.Item.Meta
-              avatar={<Avatar src={message.sender?.pictureUrl} />}
-              title={message.senderId === userId ? 'You' : message.sender?.name}
-              description={message.content}
-            />
-            <Text type="secondary">
-              {dayjs(message.dateCreated).format('DD/MM/YYYY HH:mm')}
-            </Text>
-          </List.Item>
-        )}
-      />
-      <Row justify="center" align="middle" style={{ marginTop: '20px' }}>
+      <Row gutter={16}>
         <Col span={24}>
-          <TextArea
-            rows={4}
-            value={messageContent}
-            onChange={e => setMessageContent(e.target.value)}
-            placeholder="Type your message here..."
+          <List
+            itemLayout="horizontal"
+            dataSource={messages}
+            renderItem={message => (
+              <List.Item>
+                <List.Item.Meta
+                  avatar={<Avatar src={message.sender?.pictureUrl} />}
+                  title={message.senderId === userId ? 'You' : message.sender?.name}
+                  description={message.content}
+                />
+                <Text type="secondary">
+                  {dayjs(message.dateCreated).format('DD/MM/YYYY HH:mm')}
+                </Text>
+              </List.Item>
+            )}
           />
-        </Col>
-        <Col span={24} style={{ textAlign: 'right', marginTop: '10px' }}>
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleSendMessage}
-          >
-            Send
-          </Button>
+          <Row justify="center" align="middle" style={{ marginTop: '20px' }}>
+            <Col span={24}>
+              <TextArea
+                rows={4}
+                value={messageContent}
+                onChange={e => setMessageContent(e.target.value)}
+                placeholder="Type your message here..."
+              />
+            </Col>
+            <Col span={24} style={{ textAlign: 'right', marginTop: '10px' }}>
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSendMessage}
+              >
+                Send
+              </Button>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </PageLayout>
