@@ -54,15 +54,14 @@ export const NavigationLayout: React.FC<Props> = ({ children }) => {
     },
 
     {
-      key: '/my-profile',
-      label: 'My Profile',
-      onClick: () => goTo('/my-profile'),
-    },
-
-    {
       key: '/messages',
       label: 'Direct Messages',
       onClick: () => goTo('/messages'),
+    },
+    {
+      key: '/my-groups',
+      label: 'My Groups',
+      onClick: () => goTo('/my-groups'),
     },
   ]
 
@@ -93,13 +92,12 @@ export const NavigationLayout: React.FC<Props> = ({ children }) => {
     },
 
     {
-      key: '/my-profile',
-      label: 'My Profile',
-    },
-
-    {
       key: '/messages',
       label: 'Direct Messages',
+    },
+    {
+      key: '/my-groups',
+      label: 'My Groups',
     },
   ]
 
