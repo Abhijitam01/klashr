@@ -22,11 +22,13 @@ export default function DirectMessagesPage() {
   const [messages, setMessages] = useState<Model.DirectMessage[]>([])
   const [messageContent, setMessageContent] = useState('')
   const [receiver, setReceiver] = useState<Model.User | null>(null)
+  const [followingUsers, setFollowingUsers] = useState<Model.User[]>([])
 
   useEffect(() => {
     if (userId && params.userId) {
       fetchMessages()
       fetchReceiver()
+      fetchFollowingUsers()
     }
   }, [userId, params.userId])
 
@@ -58,6 +60,17 @@ export default function DirectMessagesPage() {
       setReceiver(user)
     } catch (error) {
       enqueueSnackbar('Failed to fetch receiver', { variant: 'error' })
+    }
+  }
+
+  const fetchFollowingUsers = async () => {
+    try {
+      const user = await Api.User.findMe({
+        includes: ['followingUsers'],
+      })
+      setFollowingUsers(user.followingUsers || [])
+    } catch (error) {
+      enqueueSnackbar('Failed to fetch following users', { variant: 'error' })
     }
   }
 
@@ -133,6 +146,23 @@ export default function DirectMessagesPage() {
               </Button>
             </Col>
           </Row>
+        </Col>
+      </Row>
+      <Row gutter={16} style={{ marginTop: '20px' }}>
+        <Col span={24}>
+          <Title level={4}>Users you follow</Title>
+          <List
+            itemLayout="horizontal"
+            dataSource={followingUsers}
+            renderItem={user => (
+              <List.Item onClick={() => handleUserClick(user.id)}>
+                <List.Item.Meta
+                  avatar={<Avatar src={user.pictureUrl} />}
+                  title={user.name}
+                />
+              </List.Item>
+            )}
+          />
         </Col>
       </Row>
     </PageLayout>
