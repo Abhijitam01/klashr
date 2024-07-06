@@ -1,44 +1,66 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import { List, Typography } from 'antd';
-import { Api } from '@web/domain';
+import { useEffect, useState } from 'react';
+import { Button, List, Typography, message } from 'antd';
 import { useRouter } from 'next/navigation';
+import { Api, Model } from '@web/domain';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
-export default function MyGroups() {
-  const [groups, setGroups] = useState<any[]>([]);
+export default function MyGroupsPage() {
+  const [groups, setGroups] = useState<Model.GroupMember[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
+  const userId = 'currentUserId'; // Replace with actual user ID
 
   useEffect(() => {
-    const fetchGroups = async () => {
+    async function fetchGroups() {
       try {
-        const fetchedGroups: any[] = await Api.Group.findMany();
-        setGroups(fetchedGroups);
+        const groupMembers = await Api.GroupMember.findManyByUserId(userId);
+        setGroups(groupMembers);
       } catch (error) {
-        console.error('Failed to fetch groups:', error);
+        message.error('Failed to fetch groups');
+      } finally {
+        setLoading(false);
       }
-    };
+    }
 
     fetchGroups();
-  }, []);
+  }, [userId]);
 
-  const handleGroupClick = (groupId: string) => {
-    router.push(`/groups/${groupId}`);
+  const handleDirectMessage = async (groupId: string) => {
+    try {
+      const newMessage = await Api.DirectMessage.createOneBySenderId(userId, {
+        content: 'Hello!',
+        receiverId: groupId,
+      });
+      router.push(`/messages/${userId}`);
+    } catch (error) {
+      message.error('Failed to send message');
+    }
   };
 
   return (
     <div>
       <Title level={2}>My Groups</Title>
+      <Text>You have joined {groups.length} groups.</Text>
       <List
-        itemLayout="horizontal"
+        loading={loading}
         dataSource={groups}
-        renderItem={(group: any) => (
-          <List.Item onClick={() => handleGroupClick(group.id)}>
+        renderItem={groupMember => (
+          <List.Item
+            actions={[
+              <Button
+                type="primary"
+                onClick={() => handleDirectMessage(groupMember.groupId)}
+              >
+                Message Group
+              </Button>,
+            ]}
+          >
             <List.Item.Meta
-              title={group.name}
-              description={group.description}
+              title={groupMember.group?.name}
+              description={groupMember.group?.description}
             />
           </List.Item>
         )}
