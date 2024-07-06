@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography, Select } from 'antd'
+import { Avatar, Button, Flex, Typography, Select, Input } from 'antd'
 import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
@@ -30,6 +30,7 @@ export default function ProfilePage() {
   const [hobbies, setHobbies] = useState<Model.Like[]>([])
   const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+  const [newHobby, setNewHobby] = useState<string>('')
 
   useEffect(() => {
     const fetchHobbies = async () => {
@@ -88,13 +89,33 @@ export default function ProfilePage() {
     }
   }
 
-  const handleHobbiesChange = async (value: Model.Like[]) => {
-    setSelectedHobbies(value)
+  const handleHobbiesChange = async (value: string[]) => {
+    const mappedHobbies: Model.Like[] = value.map(id => ({
+      id,
+      userId: user.id,
+      postId: '', // Assuming postId is required but not provided in the change event
+      dateCreated: new Date().toISOString(),
+      dateUpdated: new Date().toISOString(),
+      dateDeleted: '',
+    }))
+    setSelectedHobbies(mappedHobbies)
     try {
-      await Api.User.updateOne(user.id, { likes: value.map(hobby => hobby.id) })
+      await Api.User.updateOne(user.id, { likes: mappedHobbies.map(hobby => hobby.id) })
       setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not update hobbies', { variant: 'error' })
+    }
+  }
+
+  const handleAddHobby = async () => {
+    if (!newHobby.trim()) return
+
+    try {
+      const createdHobby = await Api.Like.createOneByPostId('', { id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
+      setHobbies(prevHobbies => [...prevHobbies, createdHobby])
+      setNewHobby('')
+    } catch (error) {
+      enqueueSnackbar('Could not add new hobby', { variant: 'error' })
     }
   }
 
@@ -133,10 +154,9 @@ export default function ProfilePage() {
           mode="multiple"
           style={{ width: '100%' }}
           placeholder="Select your hobbies"
-          value={selectedHobbies}
+          value={selectedHobbies.map(hobby => hobby.id)}
           onChange={handleHobbiesChange}
           disabled={!is24HoursPassed()}
-          labelInValue
         >
           {hobbies.map(hobby => (
             <Option key={hobby.id} value={hobby.id}>
@@ -144,6 +164,18 @@ export default function ProfilePage() {
             </Option>
           ))}
         </Select>
+      </div>
+
+      <div style={{ marginTop: '20px' }}>
+        <Title level={4}>Add New Hobby</Title>
+        <Input
+          value={newHobby}
+          onChange={e => setNewHobby(e.target.value)}
+          placeholder="Enter new hobby"
+        />
+        <Button onClick={handleAddHobby} style={{ marginTop: '10px' }}>
+          Add Hobby
+        </Button>
       </div>
     </PageLayout>
   )

@@ -31,7 +31,6 @@ export default function SearchPage() {
       const usersFound = await Api.User.findMany({
         filters: {
           name: { ilike: `%${searchTerm}%` },
-          hobbies: { in: hobbies },
           area: { eq: area }
         },
         includes: ['groupMembers', 'posts'],
