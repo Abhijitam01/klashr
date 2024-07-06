@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select, Button, Slider } from 'antd'
-import { SearchOutlined, UserOutlined } from '@ant-design/icons'
+import { SearchOutlined, UserOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 const { Title, Text } = Typography
 import { useAuthentication } from '@web/modules/authentication'
 import dayjs from 'dayjs'
@@ -133,6 +133,18 @@ export default function SearchPage() {
             onChange={value => setRange(value as [number, number])}
             tooltipVisible
           />
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Button type="primary" onClick={handleSearch}>
+            Search
+          </Button>
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
         </Col>
       </Row>
       <Row justify="center">
