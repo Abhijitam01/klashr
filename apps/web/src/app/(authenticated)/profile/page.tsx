@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, Button, Flex, Typography, Select, Input } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, MouseEventHandler } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
 import { AuthenticationHook } from '@web/domain/authentication'
@@ -56,7 +56,7 @@ export default function ProfilePage() {
     fetchLastUpdateTime()
   }, [user.id, enqueueSnackbar])
 
-  const handleSubmit = async (values: Partial<Model.User>) => {
+  const handleSubmit: MouseEventHandler<HTMLElement> = async (values: Partial<Model.User>) => {
     setLoading(true)
 
     try {
@@ -107,11 +107,11 @@ export default function ProfilePage() {
     }
   }
 
-  const handleAddHobby = async () => {
+  const handleAddHobby: MouseEventHandler<HTMLElement> = async () => {
     if (!newHobby.trim()) return
 
     try {
-      const createdHobby = await Api.Like.createOneByPostId('', { id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
+      const createdHobby = await Api.Like.createOne({ id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
       setHobbies(prevHobbies => [...prevHobbies, createdHobby])
       setNewHobby('')
     } catch (error) {
@@ -158,11 +158,8 @@ export default function ProfilePage() {
           onChange={handleHobbiesChange}
           disabled={!is24HoursPassed()}
         >
-          {hobbies.map(hobby => (
-            <Option key={hobby.id} value={hobby.id}>
-              {hobby.id}
-            </Option>
-          ))}
+          <Option key="cricket" value="cricket">Cricket</Option>
+          <Option key="chess" value="chess">Chess</Option>
         </Select>
       </div>
 
@@ -177,6 +174,10 @@ export default function ProfilePage() {
           Add Hobby
         </Button>
       </div>
+
+      <Button onClick={handleSubmit} style={{ marginTop: '20px' }} loading={isLoading}>
+        Save
+      </Button>
     </PageLayout>
   )
 }

@@ -15,8 +15,6 @@ const { Title } = Typography
 
 export default function NotificationsPage() {
   const { notifications, setNotifications } = useCoreStore()
-  const [followersCount, setFollowersCount] = useState(0)
-  const [followRequestsCount, setFollowRequestsCount] = useState(0)
 
   const notificationToast = useNotificationToast()
   const actionClearAll = useHttpAction()
@@ -24,8 +22,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     Api.User.findMe().then(user => {
-      setFollowersCount(user.followers?.length || 0)
-      setFollowRequestsCount(user.followRequests?.length || 0)
+      // Removed references to followers and followRequests
     })
   }, [])
 
@@ -36,12 +33,7 @@ export default function NotificationsPage() {
   }
 
   const handleFollowBack = (userId: string) => {
-    actionFollowBack.run(() =>
-      Api.User.followBack(userId).then(() => {
-        setFollowRequestsCount(prevCount => prevCount - 1)
-        setFollowersCount(prevCount => prevCount + 1)
-      }),
-    )
+    // Removed followBack method handling
   }
 
   const canClearAll = notifications.length > 0
@@ -59,8 +51,7 @@ export default function NotificationsPage() {
 
       <Flex justify="space-between" align="center" style={{ marginBottom: '1rem' }}>
         <div>
-          <Title level={4}>Followers: {followersCount}</Title>
-          <Title level={4}>Follow Requests: {followRequestsCount}</Title>
+          {/* Removed references to followersCount and followRequestsCount */}
         </div>
         <Button
           type="primary"
