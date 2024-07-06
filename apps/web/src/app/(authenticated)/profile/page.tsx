@@ -11,6 +11,7 @@ import { useAuthentication } from '@web/modules/authentication'
 import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import { UserForm } from './components/userForm'
+import dayjs from 'dayjs'
 
 const { Title } = Typography
 const { Option } = Select
@@ -27,20 +28,31 @@ export default function ProfilePage() {
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
   const [hobbies, setHobbies] = useState<Model.Like[]>([])
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
 
   useEffect(() => {
     const fetchHobbies = async () => {
       try {
         const hobbies = await Api.Like.findManyByUserId(user.id)
         setHobbies(hobbies)
-        setSelectedHobbies(hobbies.map(hobby => hobby.id))
+        setSelectedHobbies(hobbies)
       } catch (error) {
         enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
       }
     }
 
+    const fetchLastUpdateTime = async () => {
+      try {
+        const user = await Api.User.findMe()
+        setLastUpdateTime(new Date(user.dateUpdated))
+      } catch (error) {
+        enqueueSnackbar('Could not fetch last update time', { variant: 'error' })
+      }
+    }
+
     fetchHobbies()
+    fetchLastUpdateTime()
   }, [user.id, enqueueSnackbar])
 
   const handleSubmit = async (values: Partial<Model.User>) => {
@@ -76,8 +88,21 @@ export default function ProfilePage() {
     }
   }
 
-  const handleHobbiesChange = (value: string[]) => {
+  const handleHobbiesChange = async (value: Model.Like[]) => {
     setSelectedHobbies(value)
+    try {
+      await Api.User.updateOne(user.id, { likes: value.map(hobby => hobby.id) })
+      setLastUpdateTime(new Date())
+    } catch (error) {
+      enqueueSnackbar('Could not update hobbies', { variant: 'error' })
+    }
+  }
+
+  const is24HoursPassed = () => {
+    if (!lastUpdateTime) return true
+    const now = dayjs()
+    const lastUpdate = dayjs(lastUpdateTime)
+    return now.diff(lastUpdate, 'hour') >= 24
   }
 
   return (
@@ -110,6 +135,8 @@ export default function ProfilePage() {
           placeholder="Select your hobbies"
           value={selectedHobbies}
           onChange={handleHobbiesChange}
+          disabled={!is24HoursPassed()}
+          labelInValue
         >
           {hobbies.map(hobby => (
             <Option key={hobby.id} value={hobby.id}>
