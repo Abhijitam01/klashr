@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select, Button } from 'antd'
+import { Input, List, Avatar, Typography, Row, Col, Spin, Empty, Select, Button, Slider } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 const { Title, Text } = Typography
 import { useAuthentication } from '@web/modules/authentication'
@@ -19,8 +19,9 @@ export default function SearchPage() {
   const { enqueueSnackbar } = useSnackbar()
 
   const [searchTerm, setSearchTerm] = useState('')
-  const [hobbies, setHobbies] = useState('')
+  const [hobbies, setHobbies] = useState<string[]>([])
   const [area, setArea] = useState('')
+  const [range, setRange] = useState<[number, number]>([0, 50])
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState<Model.User[]>([])
 
@@ -30,7 +31,7 @@ export default function SearchPage() {
       const usersFound = await Api.User.findMany({
         filters: {
           name: { ilike: `%${searchTerm}%` },
-          hobbies: { ilike: `%${hobbies}%` },
+          hobbies: { in: hobbies },
           area: { eq: area }
         },
         includes: ['groupMembers', 'posts'],
@@ -82,7 +83,7 @@ export default function SearchPage() {
       <Row justify="center" style={{ marginBottom: '20px' }}>
         <Col span={24}>
           <Input
-            placeholder="Search by name"
+            placeholder="Search by user"
             prefix={<SearchOutlined />}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -93,13 +94,18 @@ export default function SearchPage() {
       </Row>
       <Row justify="center" style={{ marginBottom: '20px' }}>
         <Col span={24}>
-          <Input
-            placeholder="Search by hobbies"
+          <Select
+            mode="multiple"
+            placeholder="Select hobbies"
             value={hobbies}
-            onChange={e => setHobbies(e.target.value)}
-            onPressEnter={handleSearch}
-            allowClear
-          />
+            onChange={value => setHobbies(value)}
+            style={{ width: '100%' }}
+          >
+            <Select.Option value="reading">Reading</Select.Option>
+            <Select.Option value="sports">Sports</Select.Option>
+            <Select.Option value="music">Music</Select.Option>
+            <Select.Option value="traveling">Traveling</Select.Option>
+          </Select>
         </Col>
       </Row>
       <Row justify="center" style={{ marginBottom: '20px' }}>
@@ -115,6 +121,18 @@ export default function SearchPage() {
             <Select.Option value="east">East</Select.Option>
             <Select.Option value="west">West</Select.Option>
           </Select>
+        </Col>
+      </Row>
+      <Row justify="center" style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Slider
+            range
+            min={0}
+            max={100}
+            value={range}
+            onChange={value => setRange(value as [number, number])}
+            tooltipVisible
+          />
         </Col>
       </Row>
       <Row justify="center">
