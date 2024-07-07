@@ -20,7 +20,6 @@ export default function SearchPage() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [hobbies, setHobbies] = useState<string[]>([])
-  const [area, setArea] = useState('')
   const [range, setRange] = useState<[number, number]>([0, 50])
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState<Model.User[]>([])
@@ -30,8 +29,7 @@ export default function SearchPage() {
     try {
       const usersFound = await Api.User.findMany({
         filters: {
-          name: { ilike: `%${searchTerm}%` },
-          area: { eq: area }
+          name: { ilike: `%${searchTerm}%` }
         },
         includes: ['groupMembers', 'posts'],
       })
@@ -104,21 +102,6 @@ export default function SearchPage() {
             <Select.Option value="sports">Sports</Select.Option>
             <Select.Option value="music">Music</Select.Option>
             <Select.Option value="traveling">Traveling</Select.Option>
-          </Select>
-        </Col>
-      </Row>
-      <Row justify="center" style={{ marginBottom: '20px' }}>
-        <Col span={24}>
-          <Select
-            placeholder="Select area"
-            value={area}
-            onChange={value => setArea(value)}
-            style={{ width: '100%' }}
-          >
-            <Select.Option value="north">North</Select.Option>
-            <Select.Option value="south">South</Select.Option>
-            <Select.Option value="east">East</Select.Option>
-            <Select.Option value="west">West</Select.Option>
           </Select>
         </Col>
       </Row>

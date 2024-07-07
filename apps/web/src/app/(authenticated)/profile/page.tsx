@@ -1,7 +1,7 @@
 'use client'
 
 import { Avatar, Button, Flex, Typography, Select, Input } from 'antd'
-import { useEffect, useState, MouseEventHandler } from 'react'
+import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
 import { AuthenticationHook } from '@web/domain/authentication'
@@ -27,8 +27,8 @@ export default function ProfilePage() {
 
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
-  const [hobbies, setHobbies] = useState<Model.Like[]>([])
-  const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
+  const [hobbies, setHobbies] = useState<string[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [newHobby, setNewHobby] = useState<string>('')
 
@@ -36,8 +36,8 @@ export default function ProfilePage() {
     const fetchHobbies = async () => {
       try {
         const hobbies = await Api.Like.findManyByUserId(user.id)
-        setHobbies(hobbies)
-        setSelectedHobbies(hobbies)
+        setHobbies(hobbies.map(hobby => hobby.id))
+        setSelectedHobbies(hobbies.map(hobby => hobby.id))
       } catch (error) {
         enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
       }
@@ -56,13 +56,12 @@ export default function ProfilePage() {
     fetchLastUpdateTime()
   }, [user.id, enqueueSnackbar])
 
-  const handleSubmit: MouseEventHandler<HTMLElement> = async (values: Partial<Model.User>) => {
+  const handleSubmit = async (userData: Partial<Model.User>) => {
     setLoading(true)
 
     try {
-      const { ...restValues } = values
       const userUpdated = await Api.User.updateOne(user.id, {
-        ...restValues,
+        likes: selectedHobbies
       })
       authentication.setUser(userUpdated)
     } catch (error) {
@@ -90,29 +89,21 @@ export default function ProfilePage() {
   }
 
   const handleHobbiesChange = async (value: string[]) => {
-    const mappedHobbies: Model.Like[] = value.map(id => ({
-      id,
-      userId: user.id,
-      postId: '', // Assuming postId is required but not provided in the change event
-      dateCreated: new Date().toISOString(),
-      dateUpdated: new Date().toISOString(),
-      dateDeleted: '',
-    }))
-    setSelectedHobbies(mappedHobbies)
+    setSelectedHobbies(value)
     try {
-      await Api.User.updateOne(user.id, { likes: mappedHobbies.map(hobby => hobby.id) })
+      await Api.User.updateOne(user.id, { likes: value })
       setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not update hobbies', { variant: 'error' })
     }
   }
 
-  const handleAddHobby: MouseEventHandler<HTMLElement> = async () => {
+  const handleAddHobby = async () => {
     if (!newHobby.trim()) return
 
     try {
       const createdHobby = await Api.Like.createOne({ id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
-      setHobbies(prevHobbies => [...prevHobbies, createdHobby])
+      setHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
       setNewHobby('')
     } catch (error) {
       enqueueSnackbar('Could not add new hobby', { variant: 'error' })
@@ -154,12 +145,13 @@ export default function ProfilePage() {
           mode="multiple"
           style={{ width: '100%' }}
           placeholder="Select your hobbies"
-          value={selectedHobbies.map(hobby => hobby.id)}
+          value={selectedHobbies}
           onChange={handleHobbiesChange}
           disabled={!is24HoursPassed()}
         >
-          <Option key="cricket" value="cricket">Cricket</Option>
-          <Option key="chess" value="chess">Chess</Option>
+          {hobbies.map(hobby => (
+            <Option key={hobby} value={hobby}>{hobby}</Option>
+          ))}
         </Select>
       </div>
 
@@ -175,7 +167,7 @@ export default function ProfilePage() {
         </Button>
       </div>
 
-      <Button onClick={handleSubmit} style={{ marginTop: '20px' }} loading={isLoading}>
+      <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
         Save
       </Button>
     </PageLayout>
