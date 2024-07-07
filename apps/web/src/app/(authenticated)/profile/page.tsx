@@ -27,8 +27,8 @@ export default function ProfilePage() {
 
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
-  const [hobbies, setHobbies] = useState<string[]>([])
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+  const [hobbies, setHobbies] = useState<Model.Like[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [newHobby, setNewHobby] = useState<string>('')
 
@@ -36,8 +36,8 @@ export default function ProfilePage() {
     const fetchHobbies = async () => {
       try {
         const hobbies = await Api.Like.findManyByUserId(user.id)
-        setHobbies(hobbies.map(hobby => hobby.id))
-        setSelectedHobbies(hobbies.map(hobby => hobby.id))
+        setHobbies(hobbies)
+        setSelectedHobbies(hobbies)
       } catch (error) {
         enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
       }
@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
     try {
       const userUpdated = await Api.User.updateOne(user.id, {
-        likes: selectedHobbies
+        likes: selectedHobbies.map(hobby => hobby.id)
       })
       authentication.setUser(userUpdated)
     } catch (error) {
@@ -89,9 +89,10 @@ export default function ProfilePage() {
   }
 
   const handleHobbiesChange = async (value: string[]) => {
-    setSelectedHobbies(value)
+    const updatedHobbies = hobbies.filter(hobby => value.includes(hobby.id))
+    setSelectedHobbies(updatedHobbies)
     try {
-      await Api.User.updateOne(user.id, { likes: value })
+      await Api.User.updateOne(user.id, { likes: updatedHobbies.map(hobby => hobby.id) })
       setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not update hobbies', { variant: 'error' })
@@ -103,7 +104,7 @@ export default function ProfilePage() {
 
     try {
       const createdHobby = await Api.Like.createOne({ id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
-      setHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
+      setHobbies(prevHobbies => [...prevHobbies, createdHobby])
       setNewHobby('')
     } catch (error) {
       enqueueSnackbar('Could not add new hobby', { variant: 'error' })
@@ -145,12 +146,12 @@ export default function ProfilePage() {
           mode="multiple"
           style={{ width: '100%' }}
           placeholder="Select your hobbies"
-          value={selectedHobbies}
+          value={selectedHobbies.map(hobby => hobby.id)}
           onChange={handleHobbiesChange}
           disabled={!is24HoursPassed()}
         >
           {hobbies.map(hobby => (
-            <Option key={hobby} value={hobby}>{hobby}</Option>
+            <Option key={hobby.id} value={hobby.id}>{hobby.id}</Option>
           ))}
         </Select>
       </div>
@@ -167,7 +168,7 @@ export default function ProfilePage() {
         </Button>
       </div>
 
-      <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
+      <Button onClick={() => handleSubmit({ likes: selectedHobbies.map(hobby => hobby.id) })} style={{ marginTop: '20px' }} loading={isLoading}>
         Save
       </Button>
     </PageLayout>

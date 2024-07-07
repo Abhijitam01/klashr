@@ -84,7 +84,7 @@ export class AuthorizationController {
   } {
     switch (type) {
       case AuthorizationCodeType.USER_VERIFICATION:
-        return this.userAuthorizationOrchestrator.getCodeValues()
+        return this.userAuthorizationOrchestrator.getCodeValues(type)
       default:
         this.exception.typeNotFound(type)
     }
