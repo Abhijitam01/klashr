@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography, Select, Input } from 'antd'
+import { Avatar, Button, Flex, Typography, Input } from 'antd'
 import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
@@ -14,7 +14,6 @@ import { UserForm } from './components/userForm'
 import dayjs from 'dayjs'
 
 const { Title } = Typography
-const { Option } = Select
 
 export default function ProfilePage() {
   const authentication = useAuthentication()
@@ -27,8 +26,8 @@ export default function ProfilePage() {
 
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
-  const [hobbies, setHobbies] = useState<Model.Like[]>([])
-  const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
+  const [hobbies, setHobbies] = useState<string[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [newHobby, setNewHobby] = useState<string>('')
 
@@ -36,8 +35,8 @@ export default function ProfilePage() {
     const fetchHobbies = async () => {
       try {
         const hobbies = await Api.Like.findManyByUserId(user.id)
-        setHobbies(hobbies)
-        setSelectedHobbies(hobbies)
+        setHobbies(hobbies.map(hobby => hobby.id))
+        setSelectedHobbies(hobbies.map(hobby => hobby.id))
       } catch (error) {
         enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
       }
@@ -61,7 +60,7 @@ export default function ProfilePage() {
 
     try {
       const userUpdated = await Api.User.updateOne(user.id, {
-        likes: selectedHobbies.map(hobby => hobby.id)
+        likes: selectedHobbies
       })
       authentication.setUser(userUpdated)
     } catch (error) {
@@ -89,10 +88,9 @@ export default function ProfilePage() {
   }
 
   const handleHobbiesChange = async (value: string[]) => {
-    const updatedHobbies = hobbies.filter(hobby => value.includes(hobby.id))
-    setSelectedHobbies(updatedHobbies)
+    setSelectedHobbies(value)
     try {
-      await Api.User.updateOne(user.id, { likes: updatedHobbies.map(hobby => hobby.id) })
+      await Api.User.updateOne(user.id, { likes: value })
       setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not update hobbies', { variant: 'error' })
@@ -104,8 +102,11 @@ export default function ProfilePage() {
 
     try {
       const createdHobby = await Api.Like.createOne({ id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
-      setHobbies(prevHobbies => [...prevHobbies, createdHobby])
+      setHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
+      setSelectedHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
       setNewHobby('')
+      await Api.User.updateOne(user.id, { likes: [...selectedHobbies, createdHobby.id] })
+      setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not add new hobby', { variant: 'error' })
     }
@@ -140,35 +141,7 @@ export default function ProfilePage() {
         onSubmit={handleSubmit}
       />
 
-      <div style={{ marginTop: '20px' }}>
-        <Title level={4}>Hobbies</Title>
-        <Select
-          mode="multiple"
-          style={{ width: '100%' }}
-          placeholder="Select your hobbies"
-          value={selectedHobbies.map(hobby => hobby.id)}
-          onChange={handleHobbiesChange}
-          disabled={!is24HoursPassed()}
-        >
-          {hobbies.map(hobby => (
-            <Option key={hobby.id} value={hobby.id}>{hobby.id}</Option>
-          ))}
-        </Select>
-      </div>
-
-      <div style={{ marginTop: '20px' }}>
-        <Title level={4}>Add New Hobby</Title>
-        <Input
-          value={newHobby}
-          onChange={e => setNewHobby(e.target.value)}
-          placeholder="Enter new hobby"
-        />
-        <Button onClick={handleAddHobby} style={{ marginTop: '10px' }}>
-          Add Hobby
-        </Button>
-      </div>
-
-      <Button onClick={() => handleSubmit({ likes: selectedHobbies.map(hobby => hobby.id) })} style={{ marginTop: '20px' }} loading={isLoading}>
+      <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
         Save
       </Button>
     </PageLayout>
