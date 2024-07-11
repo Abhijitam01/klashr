@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography, Input } from 'antd'
+import { Avatar, Button, Flex, Typography, Input, Select } from 'antd'
 import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
@@ -14,6 +14,7 @@ import { UserForm } from './components/userForm'
 import dayjs from 'dayjs'
 
 const { Title } = Typography
+const { Option } = Select
 
 export default function ProfilePage() {
   const authentication = useAuthentication()
@@ -60,6 +61,7 @@ export default function ProfilePage() {
 
     try {
       const userUpdated = await Api.User.updateOne(user.id, {
+        ...userData,
         likes: selectedHobbies
       })
       authentication.setUser(userUpdated)
@@ -87,21 +89,15 @@ export default function ProfilePage() {
     }
   }
 
-  const handleHobbiesChange = async (value: string[]) => {
+  const handleHobbiesChange = (value: string[]) => {
     setSelectedHobbies(value)
-    try {
-      await Api.User.updateOne(user.id, { likes: value })
-      setLastUpdateTime(new Date())
-    } catch (error) {
-      enqueueSnackbar('Could not update hobbies', { variant: 'error' })
-    }
   }
 
   const handleAddHobby = async () => {
     if (!newHobby.trim()) return
 
     try {
-      const createdHobby = await Api.Like.createOne({ id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
+      const createdHobby = await Api.Like.createOneByUserId(user.id, { id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
       setHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
       setSelectedHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
       setNewHobby('')
@@ -141,9 +137,33 @@ export default function ProfilePage() {
         onSubmit={handleSubmit}
       />
 
-      <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
-        Save
-      </Button>
+      <Flex direction="column" style={{ marginTop: '20px' }}>
+        <Select
+          mode="multiple"
+          style={{ width: '100%' }}
+          placeholder="Select hobbies"
+          value={selectedHobbies}
+          onChange={handleHobbiesChange}
+        >
+          {hobbies.map(hobby => (
+            <Option key={hobby} value={hobby}>
+              {hobby}
+            </Option>
+          ))}
+        </Select>
+        <Input
+          style={{ marginTop: '10px' }}
+          placeholder="Add new hobby"
+          value={newHobby}
+          onChange={e => setNewHobby(e.target.value)}
+        />
+        <Button onClick={handleAddHobby} style={{ marginTop: '10px' }}>
+          Add Hobby
+        </Button>
+        <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
+          Save
+        </Button>
+      </Flex>
     </PageLayout>
   )
 }
