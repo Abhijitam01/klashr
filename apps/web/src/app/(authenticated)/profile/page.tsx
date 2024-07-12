@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, Button, Flex, Typography, Input, Select } from 'antd'
+import { Avatar, Button, Typography, Input, Select } from 'antd'
 import { useEffect, useState } from 'react'
 import { RouterObject } from '@web/core/router'
 import { Api, Model } from '@web/domain'
@@ -27,8 +27,8 @@ export default function ProfilePage() {
 
   const [isLoading, setLoading] = useState(false)
   const [isLoadingLogout, setLoadingLogout] = useState(false)
-  const [hobbies, setHobbies] = useState<string[]>([])
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+  const [hobbies, setHobbies] = useState<Model.Like[]>([])
+  const [selectedHobbies, setSelectedHobbies] = useState<Model.Like[]>([])
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
   const [newHobby, setNewHobby] = useState<string>('')
 
@@ -36,8 +36,8 @@ export default function ProfilePage() {
     const fetchHobbies = async () => {
       try {
         const hobbies = await Api.Like.findManyByUserId(user.id)
-        setHobbies(hobbies.map(hobby => hobby.id))
-        setSelectedHobbies(hobbies.map(hobby => hobby.id))
+        setHobbies(hobbies)
+        setSelectedHobbies(hobbies)
       } catch (error) {
         enqueueSnackbar('Could not fetch hobbies', { variant: 'error' })
       }
@@ -62,7 +62,7 @@ export default function ProfilePage() {
     try {
       const userUpdated = await Api.User.updateOne(user.id, {
         ...userData,
-        likes: selectedHobbies
+        likes: selectedHobbies.map(hobby => hobby.id)
       })
       authentication.setUser(userUpdated)
     } catch (error) {
@@ -90,7 +90,8 @@ export default function ProfilePage() {
   }
 
   const handleHobbiesChange = (value: string[]) => {
-    setSelectedHobbies(value)
+    const selected = hobbies.filter(hobby => value.includes(hobby.id))
+    setSelectedHobbies(selected)
   }
 
   const handleAddHobby = async () => {
@@ -98,10 +99,10 @@ export default function ProfilePage() {
 
     try {
       const createdHobby = await Api.Like.createOneByUserId(user.id, { id: newHobby, userId: user.id, postId: '' }) // Assuming postId is required but not provided
-      setHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
-      setSelectedHobbies(prevHobbies => [...prevHobbies, createdHobby.id])
+      setHobbies(prevHobbies => [...prevHobbies, createdHobby])
+      setSelectedHobbies(prevHobbies => [...prevHobbies, createdHobby])
       setNewHobby('')
-      await Api.User.updateOne(user.id, { likes: [...selectedHobbies, createdHobby.id] })
+      await Api.User.updateOne(user.id, { likes: [...selectedHobbies, createdHobby].map(hobby => hobby.id) })
       setLastUpdateTime(new Date())
     } catch (error) {
       enqueueSnackbar('Could not add new hobby', { variant: 'error' })
@@ -117,18 +118,18 @@ export default function ProfilePage() {
 
   return (
     <PageLayout layout="super-narrow">
-      <Flex justify="space-between" align="center">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={1}>Profile</Title>
         <Button onClick={handleClickLogout} loading={isLoadingLogout}>
           Logout
         </Button>
-      </Flex>
+      </div>
 
-      <Flex justify="center" style={{ marginBottom: '30px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px' }}>
         <Avatar size={80} src={user?.pictureUrl}>
           {userInitials}
         </Avatar>
-      </Flex>
+      </div>
 
       <UserForm
         user={user}
@@ -137,17 +138,17 @@ export default function ProfilePage() {
         onSubmit={handleSubmit}
       />
 
-      <Flex direction="column" style={{ marginTop: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '20px' }}>
         <Select
           mode="multiple"
           style={{ width: '100%' }}
           placeholder="Select hobbies"
-          value={selectedHobbies}
+          value={selectedHobbies.map(hobby => hobby.id)}
           onChange={handleHobbiesChange}
         >
           {hobbies.map(hobby => (
-            <Option key={hobby} value={hobby}>
-              {hobby}
+            <Option key={hobby.id} value={hobby.id}>
+              {hobby.id}
             </Option>
           ))}
         </Select>
@@ -160,10 +161,10 @@ export default function ProfilePage() {
         <Button onClick={handleAddHobby} style={{ marginTop: '10px' }}>
           Add Hobby
         </Button>
-        <Button onClick={() => handleSubmit({ likes: selectedHobbies })} style={{ marginTop: '20px' }} loading={isLoading}>
+        <Button onClick={() => handleSubmit({ likes: selectedHobbies.map(hobby => hobby.id) })} style={{ marginTop: '20px' }} loading={isLoading}>
           Save
         </Button>
-      </Flex>
+      </div>
     </PageLayout>
   )
 }
