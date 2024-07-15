@@ -64,7 +64,7 @@ export default function ProfilePage() {
     try {
       const userUpdated = await Api.User.updateOne(user.id, {
         ...userData,
-        likes: selectedHobbies.map(hobby => hobby.id),
+        likes: selectedHobbies, // This needs to be an array of Like objects, not IDs
       })
       authentication.setUser(userUpdated)
     } catch (error) {
@@ -109,7 +109,7 @@ export default function ProfilePage() {
       setSelectedHobbies(prevHobbies => [...prevHobbies, createdHobby])
       setNewHobby('')
       await Api.User.updateOne(user.id, {
-        likes: [...selectedHobbies, createdHobby].map(hobby => hobby.id),
+        likes: [...selectedHobbies, createdHobby],
       })
       setLastUpdateTime(new Date())
     } catch (error) {
@@ -184,9 +184,7 @@ export default function ProfilePage() {
           Add Hobby
         </Button>
         <Button
-          onClick={() =>
-            handleSubmit({ likes: selectedHobbies.map(hobby => hobby.id) })
-          }
+          onClick={() => handleSubmit({ likes: selectedHobbies })}
           style={{ marginTop: '20px' }}
           loading={isLoading}
         >
