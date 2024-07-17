@@ -159,7 +159,6 @@ export default function SearchPage() {
                       />
                     }
                     title={user.name}
-                    description={user.email}
                   />
                 </List.Item>
               )}
