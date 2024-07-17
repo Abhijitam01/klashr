@@ -6,7 +6,7 @@ import { AuthenticationHook } from '@web/domain/authentication'
 import { PageLayout } from '@web/layouts/Page.layout'
 import { Utility } from '@web/libraries/utility'
 import { useAuthentication } from '@web/modules/authentication'
-import { Avatar, Button, Input, Select, Typography } from 'antd'
+import { Avatar, Button, Input, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react'
 import { UserForm } from './components/userForm'
 
 const { Title } = Typography
-const { Option } = Select
 
 export default function ProfilePage() {
   const authentication = useAuthentication()
@@ -91,11 +90,6 @@ export default function ProfilePage() {
     }
   }
 
-  const handleHobbiesChange = (value: string[]) => {
-    const selected = hobbies.filter(hobby => value.includes(hobby.id))
-    setSelectedHobbies(selected)
-  }
-
   const handleAddHobby = async () => {
     if (!newHobby.trim()) return
 
@@ -160,19 +154,6 @@ export default function ProfilePage() {
 
       <div style={{ marginTop: '20px' }}>
         <Title level={2}>Hobbies</Title>
-        <Select
-          mode="multiple"
-          style={{ width: '100%' }}
-          placeholder="Select hobbies"
-          value={selectedHobbies.map(hobby => hobby.id)}
-          onChange={handleHobbiesChange}
-        >
-          {hobbies.map(hobby => (
-            <Option key={hobby.id} value={hobby.id}>
-              {hobby.id}
-            </Option>
-          ))}
-        </Select>
         <Input
           style={{ marginTop: '10px' }}
           placeholder="Add new hobby"
@@ -182,6 +163,11 @@ export default function ProfilePage() {
         <Button onClick={handleAddHobby} style={{ marginTop: '10px' }}>
           Add Hobby
         </Button>
+        <div style={{ marginTop: '20px' }}>
+          {selectedHobbies.map(hobby => (
+            <div key={hobby.id}>{hobby.id}</div>
+          ))}
+        </div>
         <Button
           onClick={() => handleSubmit({ likes: selectedHobbies })}
           style={{ marginTop: '20px' }}
