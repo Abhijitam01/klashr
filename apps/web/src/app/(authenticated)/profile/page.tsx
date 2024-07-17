@@ -158,9 +158,8 @@ export default function ProfilePage() {
         onSubmit={handleSubmit}
       />
 
-      <div
-        style={{ display: 'flex', flexDirection: 'column', marginTop: '20px' }}
-      >
+      <div style={{ marginTop: '20px' }}>
+        <Title level={2}>Hobbies</Title>
         <Select
           mode="multiple"
           style={{ width: '100%' }}
