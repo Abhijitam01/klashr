@@ -73,7 +73,9 @@ export default function UserProfilePage() {
         <div style={{ textAlign: 'center' }}>
           <Avatar size={64} src={userProfile.pictureUrl} />
           <Title level={3}>{userProfile.name}</Title>
-          <Text>{userProfile.email}</Text>
+          {userId === userProfile.id ? (
+            <Text>{userProfile.email}</Text>
+          ) : null}
           <br />
           <Button
             type="primary"
