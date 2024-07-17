@@ -9,7 +9,7 @@ import {
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
 import { useAuthentication } from '@web/modules/authentication'
-import { Avatar, Button, Card, Input, List, Space, Typography } from 'antd'
+import { Avatar, Button, Card, Input, List, Modal, Space, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { useParams, useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
@@ -29,6 +29,8 @@ export default function HomePage() {
   const [newCommentContent, setNewCommentContent] = useState<
     Record<string, string>
   >({})
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false)
+  const [likedUsers, setLikedUsers] = useState<Model.User[]>([])
 
   useEffect(() => {
     if (userId) {
@@ -65,7 +67,7 @@ export default function HomePage() {
           post.id === postId
             ? {
                 ...post,
-                likes: [...(post.likes || []), { userId }] as Model.Like[],
+                likes: [...(post.likes || []), { userId, user: authentication.user }] as Model.Like[],
               }
             : post,
         ),
@@ -105,6 +107,24 @@ export default function HomePage() {
     }
   }
 
+  const fetchLikedUsers = async (postId: string) => {
+    try {
+      const post = posts.find(post => post.id === postId)
+      if (post) {
+        const userIds = post.likes?.map(like => like.userId) || []
+        const users = await Promise.all(userIds.map(id => Api.User.findOne(id)))
+        setLikedUsers(users)
+      }
+    } catch {
+      enqueueSnackbar('Failed to fetch liked users', { variant: 'error' })
+    }
+  }
+
+  const handleShowLikesModal = async (postId: string) => {
+    await fetchLikedUsers(postId)
+    setIsModalVisible(true)
+  }
+
   return (
     <PageLayout layout="narrow">
       <Title level={2}>Home</Title>
@@ -137,7 +157,7 @@ export default function HomePage() {
                 <Button
                   type="link"
                   icon={<LikeOutlined />}
-                  onClick={() => handleLikePost(post.id)}
+                  onClick={() => handleShowLikesModal(post.id)}
                   key={`like-${post.id}`}
                 >
                   {post.likes?.length || 0}
@@ -208,6 +228,25 @@ export default function HomePage() {
           </Card>
         )}
       />
+      <Modal
+        title="Users who liked this post"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+      >
+        <List
+          itemLayout="horizontal"
+          dataSource={likedUsers}
+          renderItem={user => (
+            <List.Item key={user.id}>
+              <List.Item.Meta
+                avatar={<Avatar src={user.pictureUrl} />}
+                title={<a onClick={() => router.push(`/users/${user.id}`)}>{user.name}</a>}
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
     </PageLayout>
   )
 }
