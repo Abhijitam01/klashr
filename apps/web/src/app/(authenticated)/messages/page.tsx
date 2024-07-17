@@ -24,6 +24,7 @@ export default function DirectMessagesPage() {
   const [receiver, setReceiver] = useState<Model.User | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Model.User[]>([])
+  const [invitationStatus, setInvitationStatus] = useState<'pending' | 'accepted' | 'rejected' | null>(null)
 
   useEffect(() => {
     if (userId && params.userId) {
@@ -64,6 +65,11 @@ export default function DirectMessagesPage() {
   }
 
   const handleSendMessage = async () => {
+    if (invitationStatus !== 'accepted') {
+      enqueueSnackbar('You cannot send messages until the invitation is accepted', { variant: 'error' })
+      return
+    }
+
     if (!messageContent.trim()) {
       enqueueSnackbar('Message content cannot be empty', { variant: 'error' })
       return
@@ -103,6 +109,21 @@ export default function DirectMessagesPage() {
     setSearchQuery('')
     setSearchResults([])
     handleUserClick(user.id)
+  }
+
+  const handleInviteUser = () => {
+    setInvitationStatus('pending')
+    enqueueSnackbar('Invitation sent', { variant: 'info' })
+  }
+
+  const handleAcceptInvitation = () => {
+    setInvitationStatus('accepted')
+    enqueueSnackbar('Invitation accepted', { variant: 'success' })
+  }
+
+  const handleRejectInvitation = () => {
+    setInvitationStatus('rejected')
+    enqueueSnackbar('Invitation rejected', { variant: 'error' })
   }
 
   return (
@@ -179,6 +200,32 @@ export default function DirectMessagesPage() {
               >
                 Send
               </Button>
+            </Col>
+          </Row>
+          <Row justify="center" align="middle" style={{ marginTop: '20px' }}>
+            <Col span={24} style={{ textAlign: 'center' }}>
+              {invitationStatus === null && (
+                <Button type="primary" onClick={handleInviteUser}>
+                  Invite to Conversation
+                </Button>
+              )}
+              {invitationStatus === 'pending' && (
+                <>
+                  <Text>Invitation pending...</Text>
+                  <Button type="primary" onClick={handleAcceptInvitation} style={{ marginLeft: '10px' }}>
+                    Accept
+                  </Button>
+                  <Button type="default" onClick={handleRejectInvitation} style={{ marginLeft: '10px' }}>
+                    Reject
+                  </Button>
+                </>
+              )}
+              {invitationStatus === 'accepted' && (
+                <Text>Invitation accepted. You can now send messages.</Text>
+              )}
+              {invitationStatus === 'rejected' && (
+                <Text>Invitation rejected. You cannot send messages.</Text>
+              )}
             </Col>
           </Row>
         </Col>
