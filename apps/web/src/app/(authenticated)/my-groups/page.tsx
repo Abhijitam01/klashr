@@ -1,44 +1,44 @@
 'use client'
 
-import { useEffect, useState } from 'react';
-import { Button, List, Typography, message } from 'antd';
-import { useRouter } from 'next/navigation';
-import { Api, Model } from '@web/domain';
+import { Api, Model } from '@web/domain'
+import { Button, List, Typography, message } from 'antd'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-const { Title, Text } = Typography;
+const { Title, Text } = Typography
 
 export default function MyGroupsPage() {
-  const [groups, setGroups] = useState<Model.GroupMember[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const router = useRouter();
-  const userId = 'currentUserId'; // Replace with actual user ID
+  const [groups, setGroups] = useState<Model.GroupMember[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const router = useRouter()
+  const userId = 'currentUserId' // Replace with actual user ID
 
   useEffect(() => {
     async function fetchGroups() {
       try {
-        const groupMembers = await Api.GroupMember.findManyByUserId(userId);
-        setGroups(groupMembers);
+        const groupMembers = await Api.GroupMember.findManyByUserId(userId)
+        setGroups(groupMembers)
       } catch (error) {
-        message.error('Failed to fetch groups');
+        message.error('Failed to fetch groups')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    fetchGroups();
-  }, [userId]);
+    fetchGroups()
+  }, [userId])
 
   const handleDirectMessage = async (groupId: string) => {
     try {
       const newMessage = await Api.DirectMessage.createOneBySenderId(userId, {
         content: 'Hello!',
         receiverId: groupId,
-      });
-      router.push(`/messages/${userId}`);
+      })
+      router.push(`/messages/${userId}`)
     } catch (error) {
-      message.error('Failed to send message');
+      message.error('Failed to send message')
     }
-  };
+  }
 
   return (
     <div>
@@ -51,6 +51,7 @@ export default function MyGroupsPage() {
           <List.Item
             actions={[
               <Button
+                key={`direct-message-${groupMember.id}`}
                 type="primary"
                 onClick={() => handleDirectMessage(groupMember.groupId)}
               >
@@ -66,5 +67,5 @@ export default function MyGroupsPage() {
         )}
       />
     </div>
-  );
+  )
 }

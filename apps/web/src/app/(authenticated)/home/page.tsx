@@ -1,21 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Typography, List, Avatar, Button, Input, Card, Space } from 'antd'
 import {
-  LikeOutlined,
   CommentOutlined,
+  LikeOutlined,
   PlusOutlined,
   SendOutlined,
 } from '@ant-design/icons'
-const { Title, Text, Paragraph } = Typography
-const { TextArea } = Input
-import { useAuthentication } from '@web/modules/authentication'
-import dayjs from 'dayjs'
-import { useSnackbar } from 'notistack'
-import { useRouter, useParams } from 'next/navigation'
 import { Api, Model } from '@web/domain'
 import { PageLayout } from '@web/layouts/Page.layout'
+import { useAuthentication } from '@web/modules/authentication'
+import { Avatar, Button, Card, Input, List, Space, Typography } from 'antd'
+import dayjs from 'dayjs'
+import { useParams, useRouter } from 'next/navigation'
+import { useSnackbar } from 'notistack'
+import { useEffect, useState } from 'react'
+const { Title, Text, Paragraph } = Typography
+const { TextArea } = Input
 
 export default function HomePage() {
   const router = useRouter()
@@ -63,7 +63,10 @@ export default function HomePage() {
       setPosts(
         posts.map(post =>
           post.id === postId
-            ? { ...post, likes: [...(post.likes || []), { userId }] as Model.Like[] }
+            ? {
+                ...post,
+                likes: [...(post.likes || []), { userId }] as Model.Like[],
+              }
             : post,
         ),
       )
@@ -84,7 +87,13 @@ export default function HomePage() {
         setPosts(
           posts.map(post =>
             post.id === postId
-              ? { ...post, comments: [...(post.comments || []), newComment] as Model.Comment[] }
+              ? {
+                  ...post,
+                  comments: [
+                    ...(post.comments || []),
+                    newComment,
+                  ] as Model.Comment[],
+                }
               : post,
           ),
         )
@@ -129,10 +138,15 @@ export default function HomePage() {
                   type="link"
                   icon={<LikeOutlined />}
                   onClick={() => handleLikePost(post.id)}
+                  key={`like-${post.id}`}
                 >
                   {post.likes?.length || 0}
                 </Button>,
-                <Button type="link" icon={<CommentOutlined />}>
+                <Button
+                  key={`comment-${post.id}`}
+                  type="link"
+                  icon={<CommentOutlined />}
+                >
                   {post.comments?.length || 0}
                 </Button>,
               ]}
