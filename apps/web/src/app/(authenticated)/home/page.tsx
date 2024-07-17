@@ -157,10 +157,18 @@ export default function HomePage() {
                 <Button
                   type="link"
                   icon={<LikeOutlined />}
-                  onClick={() => handleShowLikesModal(post.id)}
+                  onClick={() => handleLikePost(post.id)}
                   key={`like-${post.id}`}
                 >
                   {post.likes?.length || 0}
+                </Button>,
+                <Button
+                  type="link"
+                  icon={<LikeOutlined />}
+                  onClick={() => handleShowLikesModal(post.id)}
+                  key={`show-likes-${post.id}`}
+                >
+                  Show Likes
                 </Button>,
                 <Button
                   key={`comment-${post.id}`}
