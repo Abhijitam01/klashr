@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Typography, Input, Button, List, Avatar, Row, Col } from 'antd'
-import { SendOutlined } from '@ant-design/icons'
+import { Typography, Input, Button, List, Avatar, Row, Col, Dropdown, Menu } from 'antd'
+import { SendOutlined, SearchOutlined } from '@ant-design/icons'
 const { Title, Text } = Typography
 const { TextArea } = Input
 import { useAuthentication } from '@web/modules/authentication'
@@ -22,6 +22,8 @@ export default function DirectMessagesPage() {
   const [messages, setMessages] = useState<Model.DirectMessage[]>([])
   const [messageContent, setMessageContent] = useState('')
   const [receiver, setReceiver] = useState<Model.User | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Model.User[]>([])
 
   useEffect(() => {
     if (userId && params.userId) {
@@ -84,6 +86,25 @@ export default function DirectMessagesPage() {
     router.push(`/messages/${userId}`)
   }
 
+  const handleSearch = async () => {
+    try {
+      const users = await Api.User.findMany({
+        filters: {
+          name: { ilike: `%${searchQuery}%` }
+        }
+      })
+      setSearchResults(users)
+    } catch (error) {
+      enqueueSnackbar('Failed to fetch users', { variant: 'error' })
+    }
+  }
+
+  const handleSearchResultClick = (user: Model.User) => {
+    setSearchQuery('')
+    setSearchResults([])
+    handleUserClick(user.id)
+  }
+
   return (
     <PageLayout layout="narrow">
       <Row
@@ -94,6 +115,33 @@ export default function DirectMessagesPage() {
         <Col>
           <Title level={2}>Direct Messages</Title>
           <Text>Private conversation with {receiver?.name || 'User'}</Text>
+        </Col>
+      </Row>
+      <Row gutter={16} style={{ marginBottom: '20px' }}>
+        <Col span={24}>
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            suffix={<SearchOutlined onClick={handleSearch} />}
+          />
+          {searchResults.length > 0 && (
+            <Dropdown
+              overlay={
+                <Menu>
+                  {searchResults.map(user => (
+                    <Menu.Item key={user.id} onClick={() => handleSearchResultClick(user)}>
+                      <Avatar src={user.pictureUrl} />
+                      <Text>{user.name}</Text>
+                    </Menu.Item>
+                  ))}
+                </Menu>
+              }
+              visible={searchResults.length > 0}
+            >
+              <div />
+            </Dropdown>
+          )}
         </Col>
       </Row>
       <Row gutter={16}>
