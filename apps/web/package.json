@@ -1,8 +1,8 @@
 {
   "name": "web",
   "version": "0.0.1",
-  "description": "Marblism web",
-  "author": "marblism",
+  "description": "klashr web",
+  "author": "abhijitam",
   "private": true,
   "files": [
     ".next",
@@ -13,7 +13,7 @@
     "env:init": "sh ./scripts/env.sh",
     "dev": "sh scripts/dev.sh",
     "build": "next build",
-    "start": "sh scripts/start.sh",
+    "start": "bash scripts/start.sh",
     "lint": "next lint",
     "check": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\""

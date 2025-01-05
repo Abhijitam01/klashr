@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "jsx": "react-jsx", // Enable JSX for React
+    "esModuleInterop": true, // Enable esModuleInterop
+    "moduleResolution": "node",
+    "target": "esnext",
+    "module": "esnext",
     "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -12,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@server/*": ["./apps/server/src/*"],
-      "@web/*": ["./apps/web/src/*"]
-    }
-  }
+      "@web/*": ["./apps/web/src/*"],
+    },
+  },
 }
