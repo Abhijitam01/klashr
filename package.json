@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.9.3"
+    "@types/node": "^22.9.3",
+    "turbo": "^2.3.3"
   }
 }
